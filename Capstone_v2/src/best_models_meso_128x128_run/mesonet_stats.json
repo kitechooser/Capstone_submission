@@ -1,0 +1,24 @@
+{
+    "best_metric": 0.5972205996513367,
+    "worst_metric": 0.13711784780025482,
+    "mean_metric": 0.2973375807205836,
+    "std_metric": 0.15485423729597758,
+    "total_trials": 15,
+    "best_parameters": {
+        "initial_filters": 21.0,
+        "conv1_size": 3.0,
+        "conv_other_size": 3.0,
+        "dropout_rate": 0.2564628251102922,
+        "dense_units": 44.0,
+        "leaky_relu_alpha": 0.21558686147021622,
+        "learning_rate": 1.7429031090061486e-05,
+        "batch_size": 64.0,
+        "fake_weight": 1.2667001684859447,
+        "rotation_range": 29.0,
+        "shift_range": 0.28638282227790013,
+        "brightness_min": 0.8513547061856244,
+        "brightness_max": 1.2539035425775251,
+        "zoom_range": 0.138053275299205
+    },
+    "generated_at": "2024-11-26T16:07:36.251222"
+}

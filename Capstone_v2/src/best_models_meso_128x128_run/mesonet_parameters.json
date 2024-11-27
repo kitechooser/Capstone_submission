@@ -1,0 +1,43 @@
+{
+    "model_name": "Mesonet",
+    "optimization_strategy": "Optuna",
+    "timestamp": "2024-11-26T15:40:58.625927",
+    "parameters": {
+        "model_params": {
+            "initial_filters": 31,
+            "conv1_size": 4,
+            "conv_other_size": 7,
+            "dropout_rate": 0.4304138084050838,
+            "dense_units": 29,
+            "leaky_relu_alpha": 0.26808842393981336,
+            "learning_rate": 7.165903525914715e-05,
+            "batch_size": 16,
+            "fake_weight": 1.222368407121389,
+            "rotation_range": 14,
+            "shift_range": 0.12718905683611967,
+            "brightness_min": 0.8764435404370162,
+            "brightness_max": 1.2063256399568845,
+            "zoom_range": 0.28562982596467745
+        },
+        "training_params": {
+            "batch_size": 32,
+            "epochs": 15,
+            "use_augmentation": true,
+            "class_weights": {
+                "0": 1.5,
+                "1": 1.0
+            },
+            "augmentation_params": {
+                "rotation_range": 20,
+                "width_shift_range": 0.2,
+                "height_shift_range": 0.2,
+                "brightness_range": [
+                    0.8,
+                    1.2
+                ],
+                "horizontal_flip": true,
+                "zoom_range": 0.2
+            }
+        }
+    }
+}

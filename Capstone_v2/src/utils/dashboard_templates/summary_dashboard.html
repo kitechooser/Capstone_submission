@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Training Results Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .error-message {
+            color: red;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid red;
+            border-radius: 5px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        .offline-message {
+            text-align: center;
+            padding: 20px;
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        .metric-value {
+            font-weight: bold;
+        }
+        .metric-zero {
+            color: #dc3545;
+        }
+        .plot-container {
+            height: 500px;  /* Fixed height for plot containers */
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-5">  <!-- Changed to container-fluid for more width -->
+        <div class="row">
+            <div class="col-12">
+                <h1>Model Training Results</h1>
+                <div id="error-display" class="error-message"></div>
+                <div id="offline-message" class="offline-message">
+                    Server is offline. Please ensure the training script is running.
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Performance Metrics</h3>
+                <div id="metrics-table">
+                    <div class="loading">Loading metrics...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-6">
+                <h3>Training History</h3>
+                <div id="training-plot" class="plot-container">
+                    <div class="loading">Loading training history...</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <h3>Model Comparison</h3>
+                <div id="comparison-plot" class="plot-container">
+                    <div class="loading">Loading model comparison...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        /* Utility function to show errors */
+        function showError(message) {
+            const errorDiv = document.getElementById('error-display');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        /* Show/hide offline message */
+        function toggleOfflineMessage(show) {
+            document.getElementById('offline-message').style.display = show ? 'block' : 'none';
+        }
+
+        /* Format metric value with special handling for zero */
+        function formatMetricValue(value) {
+            if (value === null || value === undefined) return 'N/A';
+            const numValue = parseFloat(value);
+            if (isNaN(numValue)) return 'N/A';
+            if (numValue === 0) {
+                return `<span class="metric-value metric-zero">0.0000</span>`;
+            }
+            return `<span class="metric-value">${numValue.toFixed(4)}</span>`;
+        }
+
+        /* Create a formatted table of metrics */
+        function createMetricsTable(data) {
+            const table = document.createElement('table');
+            table.className = 'table table-striped table-hover';
+            
+            /* Create header */
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            ['Model', 'Accuracy', 'Precision', 'Recall', 'F1'].forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            /* Create body */
+            const tbody = document.createElement('tbody');
+            Object.entries(data).forEach(([model, metrics]) => {
+                const row = document.createElement('tr');
+                
+                /* Get latest values */
+                const accuracy = metrics.accuracy.length > 0 ? metrics.accuracy[metrics.accuracy.length - 1] : null;
+                const precision = metrics.precision.length > 0 ? metrics.precision[metrics.precision.length - 1] : null;
+                const recall = metrics.recall.length > 0 ? metrics.recall[metrics.recall.length - 1] : null;
+                const f1 = metrics.f1.length > 0 ? metrics.f1[metrics.f1.length - 1] : null;
+                
+                row.innerHTML = `
+                    <td>${model}</td>
+                    <td>${formatMetricValue(accuracy)}</td>
+                    <td>${formatMetricValue(precision)}</td>
+                    <td>${formatMetricValue(recall)}</td>
+                    <td>${formatMetricValue(f1)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+            
+            return table;
+        }
+
+        /* Create training progress plot */
+        function createTrainingPlot(data) {
+            const traces = [];
+            
+            Object.entries(data).forEach(([model, metrics]) => {
+                ['accuracy', 'precision', 'recall', 'f1'].forEach(metric => {
+                    if (metrics[metric] && metrics[metric].length > 0) {
+                        traces.push({
+                            name: `${model} - ${metric}`,
+                            y: metrics[metric],
+                            x: Array.from({length: metrics[metric].length}, (_, i) => i + 1),
+                            mode: 'lines+markers',
+                            type: 'scatter',
+                            hovertemplate: `${model}<br>${metric}: %{y:.4f}<br>Step: %{x}<extra></extra>`
+                        });
+                    }
+                });
+            });
+
+            const layout = {
+                title: 'Training Progress',
+                xaxis: { 
+                    title: 'Evaluation Step',
+                    gridcolor: '#eee'
+                },
+                yaxis: { 
+                    title: 'Score',
+                    range: [0, 1],
+                    gridcolor: '#eee'
+                },
+                hovermode: 'closest',
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    yanchor: 'bottom',
+                    y: -0.5,  /* Moved legend down */
+                    xanchor: 'center',
+                    x: 0.5
+                },
+                margin: {
+                    l: 60,
+                    r: 30,
+                    t: 50,
+                    b: 100  /* Increased bottom margin for legend */
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white'
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false
+            };
+            
+            Plotly.newPlot('training-plot', traces, layout, config);
+        }
+
+        /* Create model comparison plot */
+        function createComparisonPlot(data) {
+            const models = Object.keys(data);
+            const metrics = ['accuracy', 'precision', 'recall', 'f1'];
+            
+            const traces = metrics.map(metric => {
+                const values = models.map(model => {
+                    const metricValues = data[model][metric];
+                    return metricValues && metricValues.length > 0 ? 
+                        metricValues[metricValues.length - 1] : null;
+                });
+                
+                return {
+                    name: metric.charAt(0).toUpperCase() + metric.slice(1),
+                    y: values,
+                    x: models,
+                    type: 'bar',
+                    hovertemplate: '%{x}<br>%{y:.4f}<extra></extra>'
+                };
+            }).filter(trace => trace.y.some(v => v !== null));
+
+            const layout = {
+                title: 'Model Comparison',
+                barmode: 'group',
+                xaxis: { 
+                    title: 'Model',
+                    gridcolor: '#eee'
+                },
+                yaxis: { 
+                    title: 'Score',
+                    range: [0, 1],
+                    gridcolor: '#eee'
+                },
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    yanchor: 'bottom',
+                    y: -0.5,  /* Moved legend down */
+                    xanchor: 'center',
+                    x: 0.5
+                },
+                margin: {
+                    l: 60,
+                    r: 30,
+                    t: 50,
+                    b: 100  /* Increased bottom margin for legend */
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white'
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false
+            };
+            
+            Plotly.newPlot('comparison-plot', traces, layout, config);
+        }
+
+        /* Main update function */
+        function updateDashboard(data) {
+            if (!data || Object.keys(data).length === 0) {
+                showError('No data available for visualization');
+                return;
+            }
+
+            try {
+                /* Update metrics table */
+                const metricsTable = createMetricsTable(data);
+                const metricsDiv = document.getElementById('metrics-table');
+                if (metricsDiv) {
+                    metricsDiv.innerHTML = '';
+                    metricsDiv.appendChild(metricsTable);
+                }
+
+                /* Create plots */
+                createTrainingPlot(data);
+                createComparisonPlot(data);
+
+                /* Hide offline message if we got data */
+                toggleOfflineMessage(false);
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+                showError('Error updating visualizations: ' + error.message);
+            }
+        }
+
+        /* Data refresh function */
+        function refreshData() {
+            fetch('metrics.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && Object.keys(data).length > 0) {
+                        updateDashboard(data);
+                    } else {
+                        showError('No metrics data available');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching metrics:', error);
+                    toggleOfflineMessage(true);
+                });
+        }
+
+        /* Initial load with retry */
+        function initialLoad(retryCount = 0) {
+            refreshData();
+            if (retryCount < 3) {
+                setTimeout(() => initialLoad(retryCount + 1), 2000);
+            }
+        }
+
+        /* Start dashboard updates */
+        document.addEventListener('DOMContentLoaded', function() {
+            initialLoad();
+            setInterval(refreshData, 5000);
+        });
+    </script>
+</body>
+</html>
