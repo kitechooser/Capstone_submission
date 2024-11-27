@@ -1,6 +1,6 @@
 This code is known working with Python 3.10. This was used so the Apple GPU could be utilised.
 
-There is a notebook in ./src that shows aspects of this code running with output
+There is a notebook in ./src 'training-notebook.ipynb' that shows aspects of this code running with output
 There is example output in ./best_models and ./best_models_meso_128x128_run
 
 The data files needed are in the image_data folder. If you prefer to download them they can be found at: https://www.kaggle.com/code/alnomanabdullah/mesonet-with-real-and-fake-images-dataset-1/input
