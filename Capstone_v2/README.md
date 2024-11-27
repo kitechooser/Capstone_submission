@@ -1,3 +1,6 @@
+This project aims to classify images as real or fake for digital forensics using lightweight models like Mesonet and complementary algorithms (CNN, SVM, Random Forest). It processes 256x256 RGB images with a pipeline including data augmentation (rescaling, rotations, flips) and balanced training via class weights. Key metrics include validation accuracy of 77%. Applications span detecting digital forgeries in journalism, law enforcement, and image authentication. Ethical considerations include potential dataset bias and privacy concerns due to lack of explicit consent. Future improvements target optimizing hyperparameters and combining models to streamline workflow and reduce computational costs.
+
+
 This code is known working with Python 3.10. This was used so the Apple GPU could be utilised.
 
 There is a notebook in ./src 'training-notebook.ipynb' that shows aspects of this code running with output
